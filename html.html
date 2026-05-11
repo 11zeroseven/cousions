@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cousin Ranking System</title>
+    <style>
+        :root {
+            --primary: #4F46E5;
+            --primary-hover: #4338CA;
+            --bg: #F3F4F6;
+            --card-bg: #FFFFFF;
+            --text: #1F2937;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            max-width: 600px;
+            width: 100%;
+        }
+
+        h1, h2 {
+            text-align: center;
+            color: var(--primary);
+        }
+
+        .header-actions {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            gap: 10px;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        input[type="text"], select, input[type="number"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #D1D5DB;
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.3s;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .btn-secondary {
+            background-color: #6B7280;
+        }
+        .btn-secondary:hover {
+            background-color: #4B5563;
+        }
+        
+        .btn-danger {
+            background-color: #EF4444;
+        }
+        .btn-danger:hover {
+            background-color: #DC2626;
+        }
+
+        .cousin-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .badge {
+            background-color: #E0E7FF;
+            color: var(--primary);
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #E5E7EB;
+        }
+
+        th {
+            background-color: #F9FAFB;
+        }
+
+        .hidden {
+            display: none;
+        }
+        
+        .success-msg {
+            color: #059669;
+            text-align: center;
+            font-weight: bold;
+            margin-top: 10px;
+            min-height: 24px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Cousin Showdown</h1>
+
+    <!-- Top Action Bar -->
+    <div class="header-actions">
+        <button class="btn-secondary" onclick="generateShareLink()">🔗 Copy Share Link</button>
+        <button class="btn-danger" onclick="clearAllData()">🗑️ Reset Everything</button>
+    </div>
+
+    <!-- SECTION 1: Add Cousins -->
+    <div class="card">
+        <h2>1. Add Cousins</h2>
+        <div class="form-group">
+            <input type="text" id="cousinName" placeholder="Enter cousin's name" onkeypress="handleKeyPress(event)">
+        </div>
+        <button onclick="addCousin()">Add Cousin</button>
+        <div class="cousin-list" id="cousinListDisplay"></div>
+    </div>
+
+    <!-- SECTION 2: Rating Panel -->
+    <div class="card hidden" id="ratingSection">
+        <h2>2. Time to Rate!</h2>
+        
+        <div class="form-group">
+            <label>Who is giving the rating?</label>
+            <select id="rater" onchange="updateRateeDropdown()"></select>
+        </div>
+
+        <div class="form-group">
+            <label>Who are they rating?</label>
+            <select id="ratee"></select>
+        </div>
+
+        <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
+
+        <p style="text-align:center; font-size: 14px; color: #666;">Rate from 1 to 10</p>
+
+        <div class="form-group"><label>😂 Humor</label><input type="number" id="catHumor" min="1" max="10" value="5"></div>
+        <div class="form-group"><label>🧠 Intelligence</label><input type="number" id="catSmart" min="1" max="10" value="5"></div>
+        <div class="form-group"><label>✨ Style</label><input type="number" id="catStyle" min="1" max="10" value="5"></div>
+        <div class="form-group"><label>❤️ Kindness</label><input type="number" id="catKind" min="1" max="10" value="5"></div>
+        <div class="form-group"><label>🎉 Fun Factor</label><input type="number" id="catFun" min="1" max="10" value="5"></div>
+
+        <button onclick="submitRating()" style="background-color: #10B981;">Submit Rating</button>
+        <div id="ratingSuccessMsg" class="success-msg"></div>
+    </div>
+
+    <!-- SECTION 3: Results -->
+    <div class="card hidden" id="resultsSection">
+        <h2>3. Final Rankings</h2>
+        <button onclick="calculateRankings()">Update Rankings 🏆</button>
+        
+        <table id="rankingTable" class="hidden">
+            <thead>
+                <tr>
+                    <th>Rank</th>
+                    <th>Cousin</th>
+                    <th>Total Avg Score</th>
+                </tr>
+            </thead>
+            <tbody id="rankingBody"></tbody>
+        </table>
+    </div>
+
+</div>
+
+<script>
+    // Data Storage
+    let cousins = [];
+    let ratingsData = {};
+    const STORAGE_KEY = 'cousinShowdownApp';
+
+    // --- INITIALIZATION ---
+    window.onload = function() {
+        loadState();
+    };
+
+    // --- DATA MANAGEMENT & PERSISTENCE ---
+    function saveState() {
+        const state = { cousins, ratingsData };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    }
+
+    function loadState() {
+        // 1. Check if loading from a shared link (URL parameters)
+        const urlParams = new URLSearchParams(window.location.search);
+        const sharedData = urlParams.get('data');
+
+        if (sharedData) {
+            try {
+                // Decode the Base64 URL data
+                const parsed = JSON.parse(decodeURIComponent(atob(sharedData)));
+                cousins = parsed.cousins || [];
+                ratingsData = parsed.ratingsData || {};
+                
+                // Clear the long ugly URL so it looks clean again
+                window.history.replaceState({}, document.title, window.location.pathname);
+                saveState(); // Save this shared data locally
+            } catch (e) {
+                console.error("Failed to load shared data", e);
+                alert("The share link is invalid or corrupted.");
+            }
+        } else {
+            // 2. Load from local browser storage if no URL link
+            const localData = localStorage.getItem(STORAGE_KEY);
+            if (localData) {
+                const parsed = JSON.parse(localData);
+                cousins = parsed.cousins || [];
+                ratingsData = parsed.ratingsData || {};
+            }
+        }
+
+        // Update UI based on loaded data
+        refreshUI();
+    }
+
+    function clearAllData() {
+        if (confirm("Are you sure you want to delete all cousins and ratings? This cannot be undone.")) {
+            localStorage.removeItem(STORAGE_KEY);
+            cousins = [];
+            ratingsData = {};
+            refreshUI();
+            document.getElementById('rankingTable').classList.add('hidden');
+        }
+    }
+
+    function generateShareLink() {
+        const state = { cousins, ratingsData };
+        // Create a safe, encoded base64 string of the data
+        const encodedData = btoa(encodeURIComponent(JSON.stringify(state)));
+        
+        // Build the URL
+        const currentUrl = window.location.origin + window.location.pathname;
+        const shareableUrl = `${currentUrl}?data=${encodedData}`;
+        
+        // Copy to clipboard
+        navigator.clipboard.writeText(shareableUrl).then(() => {
+            alert("Share link copied to your clipboard! Paste it anywhere to share the current rankings.");
+        }).catch(err => {
+            alert("Failed to copy link automatically. Here is your link:\n\n" + shareableUrl);
+        });
+    }
+
+    // --- APP LOGIC ---
+    function handleKeyPress(e) {
+        if (e.key === 'Enter') addCousin();
+    }
+
+    function addCousin() {
+        const nameInput = document.getElementById('cousinName');
+        const name = nameInput.value.trim();
+
+        if (name === '') return alert("Please enter a name.");
+        if (cousins.includes(name)) return alert("This cousin is already added!");
+
+        // Add to arrays
+        cousins.push(name);
+        ratingsData[name] = { totalScore: 0, numberOfRatings: 0 };
+        
+        saveState();
+        nameInput.value = '';
+        refreshUI();
+    }
+
+    function submitRating() {
+        const rater = document.getElementById('rater').value;
+        const ratee = document.getElementById('ratee').value;
+
+        if (!rater || !ratee) return alert("Please select both a rater and someone to rate.");
+
+        const scores = [
+            parseInt(document.getElementById('catHumor').value) || 0,
+            parseInt(document.getElementById('catSmart').value) || 0,
+            parseInt(document.getElementById('catStyle').value) || 0,
+            parseInt(document.getElementById('catKind').value) || 0,
+            parseInt(document.getElementById('catFun').value) || 0
+        ];
+
+        const sessionAverage = scores.reduce((a, b) => a + b, 0) / 5;
+
+        // Add to ratee's overall data
+        ratingsData[ratee].totalScore += sessionAverage;
+        ratingsData[ratee].numberOfRatings += 1;
+
+        saveState(); // Save locally
+
+        // Reset numerical inputs
+        ['catHumor', 'catSmart', 'catStyle', 'catKind', 'catFun'].forEach(id => {
+            document.getElementById(id).value = '5';
+        });
+        document.getElementById('ratee').value = '';
+
+        // Show success message
+        const msg = document.getElementById('ratingSuccessMsg');
+        msg.innerText = `${rater}'s rating for ${ratee} was saved!`;
+        setTimeout(() => msg.innerText = '', 3000);
+
+        // Auto-update rankings if they are currently visible
+        if (!document.getElementById('rankingTable').classList.contains('hidden')) {
+            calculateRankings();
+        }
+    }
+
+    // --- UI UPDATES ---
+    function refreshUI() {
+        renderCousinList();
+        updateDropdowns();
+        
+        const hasEnoughCousins = cousins.length >= 2;
+        document.getElementById('ratingSection').classList.toggle('hidden', !hasEnoughCousins);
+        document.getElementById('resultsSection').classList.toggle('hidden', !hasEnoughCousins);
+        
+        // If we loaded saved data that has ratings, auto-calculate the table
+        let totalRatings = Object.values(ratingsData).reduce((sum, item) => sum + item.numberOfRatings, 0);
+        if (totalRatings > 0) {
+            calculateRankings();
+        } else {
+            document.getElementById('rankingTable').classList.add('hidden');
+        }
+    }
+
+    function renderCousinList() {
+        const listDiv = document.getElementById('cousinListDisplay');
+        listDiv.innerHTML = '';
+        cousins.forEach(c => {
+            const span = document.createElement('span');
+            span.className = 'badge';
+            span.innerText = c;
+            listDiv.appendChild(span);
+        });
+    }
+
+    function updateDropdowns() {
+        const raterSelect = document.getElementById('rater');
+        const currentRater = raterSelect.value;
+        
+        raterSelect.innerHTML = '<option value="">-- Select --</option>';
+        cousins.forEach(c => {
+            raterSelect.innerHTML += `<option value="${c}">${c}</option>`;
+        });
+        
+        if (cousins.includes(currentRater)) raterSelect.value = currentRater;
+        updateRateeDropdown();
+    }
+
+    function updateRateeDropdown() {
+        const raterSelect = document.getElementById('rater');
+        const rateeSelect = document.getElementById('ratee');
+        const rater = raterSelect.value;
+        const currentRatee = rateeSelect.value;
+
+        rateeSelect.innerHTML = '<option value="">-- Select --</option>';
+        cousins.forEach(c => {
+            if (c !== rater) { // Prevent self-rating
+                rateeSelect.innerHTML += `<option value="${c}">${c}</option>`;
+            }
+        });
+        
+        // Retain previous ratee selection if valid
+        if (currentRatee !== rater && cousins.includes(currentRatee)) {
+            rateeSelect.value = currentRatee;
+        }
+    }
+
+    function calculateRankings() {
+        let leaderboard = cousins.map(c => {
+            let finalAvg = ratingsData[c].numberOfRatings > 0 
+                ? ratingsData[c].totalScore / ratingsData[c].numberOfRatings 
+                : 0;
+            return { name: c, score: finalAvg };
+        });
+
+        // Sort Highest to Lowest
+        leaderboard.sort((a, b) => b.score - a.score);
+
+        const tbody = document.getElementById('rankingBody');
+        tbody.innerHTML = '';
+
+        leaderboard.forEach((item, index) => {
+            const displayScore = item.score > 0 ? item.score.toFixed(2) + " / 10" : "No ratings yet";
+            
+            let medal = "";
+            if (item.score > 0) {
+                if (index === 0) medal = "🥇 ";
+                else if (index === 1) medal = "🥈 ";
+                else if (index === 2) medal = "🥉 ";
+            }
+
+            tbody.innerHTML += `
+                <tr>
+                    <td><b>${index + 1}</b></td>
+                    <td>${medal}${item.name}</td>
+                    <td><b>${displayScore}</b></td>
+                </tr>
+            `;
+        });
+
+        document.getElementById('rankingTable').classList.remove('hidden');
+    }
+</script>
+</body>
+</html>
